@@ -1,0 +1,132 @@
+
+Se crea en este caso el proyecto con Kotlin
+
+                Archivo: build.gradle se configura:
+
+DefaultConfig{
+minSdkVersion 21 } --> Tener en cuenta la antiguedad de la aplicacion
+----La version se cambia tambien si al probar en un movil real lo pide
+
+Como el minsdk es 21 se configura lo siguiete, si fuera superior 
+no haria falta
+
+dependencias{
+implementation('com.journeyapps:zxing-android-embedded:4.1.0') { transitive = false }
+implementation 'com.google.zxing:core:3.3.0'
+
+}
+
+Dentro de las llaves de android
+
+android{
+
+	
+    	compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+	kotlinOptions {
+        jvmTarget = '1.8' (esta ya viene)
+    }
+    	buildFeatures{
+        viewBinding = true
+
+    }
+}
+
+
+
+
+Para sobreescribir la libreria agregada y no vayan a chocar
+               archivo: AndroidManifest.xml
+
+Dentro del <manifest>, antes de <aplication>
+
+ <uses-sdk tools:overrideLibrary="com.google.zxing.client.android" />
+
+al agregar esta linea, se tiene que importar, la importacion se 
+coloca dentro del primer <manifest>:
+
+<manifest
+xmlns:tools="http://schemas.android.com/tools"
+
+
+Para acelerar la c'amara, dentro de la etiqueta <aplication>
+<application
+android:hardwareAccelerated="true"/>
+
+Para orientar la camara y no aparezca de forma horizontal
+Etiqueta aparte
+<activity android:name="com.journeyapps.barcodescanner.CaptureActivity"
+            android:screenOrientation="portrait"
+            tools:replace="screenOrientation"/>
+
+//Al final se sincroniza Sync(ubicada en la parte superior derecha del IDE)
+
+
+
+		archivo: activity_main.xml
+
+Se cambia la etiqueta Text que viene por defecto a Button
+
+<Button
+        android:id="@+id/btnScanner"
+	android:text="Escanear!" (el texto que viene por defecto)
+
+/>
+
+
+
+        	archivo: MainActivity.kt 
+    	(o .java, segun el lenguaje que se programe)
+
+
+class MainActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityMainBinding  (nose)
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)                   (venia por defecto: setContentView(R.layout.activity_main))
+        binding.btnScanner.setOnClickListener{ initScanner()} este initScanner se crea mas abajo
+    }
+    private fun initScanner(){
+        //IntentIntegrator(this).initiateScan() Se cambia por la linea siguiente para tener mas funcionalidades
+	//Se crea una variable a IntentIntegrator
+	val tipoScanner = IntentIntegrator(this)
+        tipoScanner.setDesiredBarcodeFormats(IntentIntegrator.QR_CODE)//tipo de scanners
+        tipoScanner.setPrompt("Escaneando")//mensaje al escanear
+        tipoScanner.setTorchEnabled(true)//flag de la camara
+        tipoScanner.setBeepEnabled(true)//sonidito del scann
+        tipoScanner.initiateScan()//Inicializar
+    }
+
+
+	//Con esto se controla la respuesta de los eventos del scanner
+	//Se busca los override en la pesta;a code del IDE, se tiene que sobreescribir
+	el metodo inicial
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+
+        val result = IntentIntegrator.parseActivityResult(requestCode,resultCode,data)
+        if(result !=null){
+            if(result.contents == null){
+                Toast.makeText(this, "Cancelado", Toast.LENGTH_SHORT).show()
+            }else{
+                Toast.makeText(this, "Resultado: {${result.contents}}", Toast.LENGTH_SHORT).show()
+            }
+        }else{
+            super.onActivityResult(requestCode, resultCode, data)
+
+        }
+
+
+    }
+}
+
+Nota: journeyapps es la persona que resumio la implementacion de zxing, si se hace de zxin
+	directamente es mas rollo
+
+
+TUTORIAL:	https://www.youtube.com/watch?v=Wdb5okugwmU
